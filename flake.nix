@@ -11,6 +11,8 @@
         nativeBuildInputs = [ pkgs.bashInteractive ];
         buildInputs = with pkgs; [
           nodePackages.prisma
+          nodePackages.npm
+          nodejs-slim
         ];
         shellHook = with pkgs; ''
           export PRISMA_MIGRATION_ENGINE_BINARY="${prisma-engines}/bin/migration-engine"
