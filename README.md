@@ -33,3 +33,54 @@ fi
 ```
 
 If I'm having a vacation or get hit by a bus, and you need to update prisma in the nix monorepo, there's two things to update: the [cli npm package](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/node-packages/default.nix#L281-L298) and the [rust engines](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/database/prisma-engines/default.nix). See an [example pull request](https://github.com/NixOS/nixpkgs/pull/139430).
+
+## Updating
+
+If the repository the `flake.nix` has a new version of Prisma, to get the same version to your project requires a few steps.
+
+First make your flake to point to the latest commit in the repository:
+
+``` bash
+> nix flake update
+```
+
+After that, direnv should catch the changed files, and install the latest Prisma to your environment. Check the version:
+
+``` bash
+❯ prisma --version
+Environment variables loaded from .env
+Warning Precompiled binaries are not available for nixos.
+prisma                  : 3.2.0
+@prisma/client          : 3.1.1
+Current platform        : linux-nixos
+Query Engine (Node-API) : libquery-engine  (at ../../../../../nix/store/vckf62m16nxk9wyh5js2psmdsypl4lq1-prisma-engines-3.2.0/lib/libquery_engine.node, resolved by PRISMA_QUERY_ENGINE_LIBRARY)
+Migration Engine        : migration-engine-cli  (at ../../../../../nix/store/vckf62m16nxk9wyh5js2psmdsypl4lq1-prisma-engines-3.2.0/bin/migration-engine, resolved by PRISMA_MIGRATION_ENGINE_BINARY)
+Introspection Engine    : introspection-core  (at ../../../../../nix/store/vckf62m16nxk9wyh5js2psmdsypl4lq1-prisma-engines-3.2.0/bin/introspection-engine, resolved by PRISMA_INTROSPECTION_ENGINE_BINARY)
+Format Binary           : prisma-fmt  (at ../../../../../nix/store/vckf62m16nxk9wyh5js2psmdsypl4lq1-prisma-engines-3.2.0/bin/prisma-fmt, resolved by PRISMA_FMT_BINARY)
+Default Engines Hash    : afdab2f10860244038c4e32458134112852d4dad
+Studio                  : 0.435.0
+```
+
+Now we see the `@prisma/client` is using an older version, so change the versioning accordingly in the `package.json` file. It might be required to delete the `node_modules` directory before running `prisma generate`. After a successful update the version output should list the same version for `prisma` and `@prisma/client`:
+
+``` bash
+❯ prisma --version
+Environment variables loaded from .env
+Warning Precompiled binaries are not available for nixos.
+prisma                  : 3.2.0
+@prisma/client          : 3.2.0
+```
+
+If the nixpkgs master doesn't yet have the latest version, point to the repository that has the update by changing the nixpkgs url in the flake:
+
+``` nix
+inputs.nixpkgs.url = "github:NixOS/nixpkgs/master";
+```
+
+changes to
+
+``` nix
+inputs.nixpkgs.url = "github:pimeys/nixpkgs/prisma-3_2_0";
+```
+
+By just entering the directory, direnv should catch the changes and install the new derivation. After this is done, handle the update process as written above.
